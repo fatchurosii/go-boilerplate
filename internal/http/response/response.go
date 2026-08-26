@@ -6,12 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const RequestIDKey = "requestId"
-
-// Base isinya field yang selalu ada di SETIAP response, sukses maupun error
 type Base struct {
-	Message   string `json:"message"`
-	RequestID string `json:"requestId"`
+	Message  string `json:"message"`
+	Success bool   `json:"success"`
 }
 
 type Response[T any] struct {
@@ -38,29 +35,25 @@ type Meta struct {
 }
 
 type AppError struct {
-	Status  int
 	Code    int
 	Message string
 	Errors  []FieldError
 }
 
-func newBase(c *gin.Context, message string) Base {
-	return Base{
-		Message:   message,
-		RequestID: RequestID(c),
-	}
+func newBase(status bool, message string) Base {
+	return Base{Message: message, Success: status}
 }
 
 func Success[T any](c *gin.Context, status int, message string, data T) {
 	c.JSON(status, Response[T]{
-		Base: newBase(c, message),
+		Base: newBase(true, message),
 		Data: data,
 	})
 }
 
 func SuccessPaginate[T any](c *gin.Context, status int, message string, data []T, meta Meta) {
 	c.JSON(status, Response[[]T]{
-		Base: newBase(c, message),
+		Base: newBase(true, message),
 		Data: data,
 		Meta: &meta,
 	})
@@ -70,23 +63,16 @@ func Error(c *gin.Context, err *AppError) {
 	if err == nil {
 		err = InternalServerError("internal server error")
 	}
+
 	errs := err.Errors
 	if errs == nil {
 		errs = []FieldError{}
 	}
-	c.JSON(err.Status, ErrorResponse{
-		Base:   newBase(c, err.Message),
+
+	c.JSON(err.Code, ErrorResponse{
+		Base:   newBase(false, err.Message),
 		Errors: errs,
 	})
-}
-
-func RequestID(c *gin.Context) string {
-	value, exists := c.Get(RequestIDKey)
-	if !exists {
-		return ""
-	}
-	requestID, _ := value.(string)
-	return requestID
 }
 
 func BadRequest(message string) *AppError {
@@ -113,10 +99,9 @@ func ValidationError(errors []FieldError) *AppError {
 	return newError(http.StatusBadRequest, "validation failed", errors)
 }
 
-func newError(status int, message string, errors []FieldError) *AppError {
+func newError(code int, message string, errors []FieldError) *AppError {
 	return &AppError{
-		Status:  status,
-		Code:    status,
+		Code:    code,
 		Message: message,
 		Errors:  errors,
 	}

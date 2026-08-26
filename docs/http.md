@@ -13,8 +13,16 @@ Global middleware provides:
 - Panic recovery with the standard error response.
 - CORS configured from environment variables.
 
-The request ID is included in the Gin context, response header, logs, and API
-response. Auth middleware is applied only to protected route groups.
+`X-Request-ID` is the single source of truth. It is returned in the response
+header and included in logs, but not duplicated in the response body. Auth
+middleware is applied only to protected route groups.
+
+```http
+X-Request-ID: request-123
+```
+
+Clients should use this response header when correlating API errors with
+server logs.
 
 ## Responses
 
@@ -29,9 +37,8 @@ Successful responses use this shape:
 
 ```json
 {
-  "code": 200,
   "message": "success",
-  "requestId": "...",
+  "success": true,
   "data": {}
 }
 ```
@@ -40,9 +47,8 @@ Errors use this shape:
 
 ```json
 {
-  "code": 400,
   "message": "validation failed",
-  "requestId": "...",
+  "success": false,
   "errors": [
     {
       "field": "email",

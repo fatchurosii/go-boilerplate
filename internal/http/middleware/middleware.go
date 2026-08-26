@@ -4,9 +4,10 @@ import (
 	"log/slog"
 	"time"
 
+	"go-boilerplate/internal/http/response"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"go-boilerplate/internal/http/response"
 )
 
 const requestIDHeader = "X-Request-ID"
@@ -17,7 +18,6 @@ func RequestID() gin.HandlerFunc {
 		if requestID == "" {
 			requestID = newRequestID()
 		}
-		c.Set(response.RequestIDKey, requestID)
 		c.Header(requestIDHeader, requestID)
 		c.Next()
 	}
@@ -28,7 +28,7 @@ func Logger(logger *slog.Logger) gin.HandlerFunc {
 		startedAt := time.Now()
 		c.Next()
 		logger.Info("http request",
-			slog.String("requestId", response.RequestID(c)),
+			slog.String("requestId", getRequestID(c)),
 			slog.String("method", c.Request.Method),
 			slog.String("path", c.Request.URL.Path),
 			slog.Int("status", c.Writer.Status()),
@@ -43,7 +43,7 @@ func Recovery(logger *slog.Logger) gin.HandlerFunc {
 		defer func() {
 			if recovered := recover(); recovered != nil {
 				logger.Error("panic recovered",
-					slog.String("requestId", response.RequestID(c)),
+					slog.String("requestId", getRequestID(c)),
 					slog.Any("error", recovered),
 				)
 				response.Error(c, response.InternalServerError("internal server error"))
@@ -60,4 +60,8 @@ func newRequestID() string {
 		return uuid.NewString()
 	}
 	return id.String()
+}
+
+func getRequestID(c *gin.Context) string {
+	return c.Writer.Header().Get(requestIDHeader)
 }

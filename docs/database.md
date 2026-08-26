@@ -18,6 +18,9 @@ go run ./cmd/migrate create create_users_table
 docker compose --profile tools run --rm migrate create create_users_table
 ```
 
+The generated `up.sql` and `down.sql` files contain placeholders. Fill both
+files with the forward and rollback SQL before applying the migration.
+
 Apply all pending migrations or one step:
 
 ```bash
