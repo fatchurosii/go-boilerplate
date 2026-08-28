@@ -49,6 +49,8 @@ func main() {
 		err = version(databaseURL)
 	case "force":
 		err = force(databaseURL, args[1:])
+	case "fresh":
+		err = fresh(databaseURL)
 	default:
 		usage()
 		os.Exit(1)
@@ -226,6 +228,23 @@ func sanitize(name string) string {
 
 	return strings.Trim(builder.String(), "_")
 }
+func fresh(databaseURL string) error {
+	m, err := newMigrator(databaseURL)
+	if err != nil {
+		return err
+	}
+	defer m.Close()
+
+	if err := m.Drop(); err != nil {
+		return err
+	}
+
+	err = m.Up()
+	if errors.Is(err, migrate.ErrNoChange) {
+		return nil
+	}
+	return err
+}
 
 func usage() {
 	fmt.Println(`Usage:
@@ -233,5 +252,6 @@ func usage() {
   go run ./cmd/migrate up [steps]
   go run ./cmd/migrate down [steps]
   go run ./cmd/migrate version
-  go run ./cmd/migrate force <version>`)
+  go run ./cmd/migrate force <version>
+  go run ./cmd/migrate fresh`)
 }
