@@ -19,14 +19,17 @@ func Auth(jwtManager *auth.JWTManager) gin.HandlerFunc {
 
 		tokenString := bearerToken(c.GetHeader("Authorization"))
 		if tokenString == "" {
-			response.Error(c, response.Unauthorized("missing bearer token"))
+			tokenString, _ = c.Cookie(auth.AccessTokenCookie)
+		}
+		if tokenString == "" {
+			response.Error(c, response.Unauthorized("missing access token"))
 			c.Abort()
 			return
 		}
 
 		claims, err := jwtManager.ParseAccessToken(tokenString)
 		if err != nil {
-			response.Error(c, response.Unauthorized("invalid bearer token"))
+			response.Error(c, response.Unauthorized("invalid access token"))
 			c.Abort()
 			return
 		}

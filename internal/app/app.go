@@ -43,7 +43,7 @@ func New(deps Deps) (*App, error) {
 
 	userRepository := user.NewRepository(db)
 	authService := auth.NewService(userRepository, jwtManager)
-	authHandler := auth.NewHandler(authService)
+	authHandler := auth.NewHandler(authService, deps.Config.AppEnv == "production")
 
 	exampleService := example.NewService()
 	exampleHandler := example.NewHandler(exampleService)

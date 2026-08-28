@@ -11,16 +11,19 @@ import (
 )
 
 type Handler struct {
-	service *Service
+	service      *Service
+	cookieSecure bool
 }
+
+const AccessTokenCookie = "access_token"
 
 type LoginRequest struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
-func NewHandler(service *Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *Service, cookieSecure bool) *Handler {
+	return &Handler{service: service, cookieSecure: cookieSecure}
 }
 
 func (h *Handler) Login(c *gin.Context) {
@@ -42,10 +45,14 @@ func (h *Handler) Login(c *gin.Context) {
 		response.Error(c, serviceError(err))
 		return
 	}
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie(AccessTokenCookie, result.AccessToken, 0, "/", "", h.cookieSecure, true)
 	response.Success(c, http.StatusOK, "login success", result)
 }
 
 func (h *Handler) Logout(c *gin.Context) {
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie(AccessTokenCookie, "", -1, "/", "", h.cookieSecure, true)
 	response.Success[any](c, http.StatusOK, "logout success", nil)
 }
 
