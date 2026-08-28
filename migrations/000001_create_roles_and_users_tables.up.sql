@@ -3,6 +3,9 @@ CREATE TABLE roles (
   name VARCHAR(100) NOT NULL,
   slug VARCHAR(100) NOT NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_by UUID,
+  updated_by UUID,
+  deleted_by UUID,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   deleted_at TIMESTAMPTZ
@@ -17,6 +20,9 @@ CREATE TABLE users (
   username VARCHAR(100) NOT NULL,
   password TEXT NOT NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_by UUID,
+  updated_by UUID,
+  deleted_by UUID,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   deleted_at TIMESTAMPTZ

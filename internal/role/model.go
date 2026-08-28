@@ -1,7 +1,7 @@
 package role
 
 import (
-	"time"
+	"go-boilerplate/internal/audit"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -12,21 +12,16 @@ type Role struct {
 	Name      string         `gorm:"size:100;not null" json:"name"`
 	Slug      string         `gorm:"size:100;not null" json:"slug"`
 	IsActive  bool           `gorm:"not null;default:true" json:"isActive"`
-	CreatedAt time.Time      `json:"createdAt"`
-	UpdatedAt time.Time      `json:"updatedAt"`
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	audit.BaseModel
 }
 
 func (r *Role) BeforeCreate(tx *gorm.DB) error {
-	if r.ID != uuid.Nil {
-		return nil
+	if r.ID == uuid.Nil {
+		id, err := uuid.NewV7()
+		if err != nil {
+			return err
+		}
+		r.ID = id
 	}
-
-	id, err := uuid.NewV7()
-	if err != nil {
-		return err
-	}
-
-	r.ID = id
-	return nil
+	return r.BaseModel.BeforeCreate(tx)
 }
